@@ -2,11 +2,11 @@ import jdk.javadoc.internal.doclint.Messages
 import java.lang.RuntimeException
 
 fun main(args: Array<String>) {
-    MyChatService.sendMessage(1,MyMessage(0,1,0,"New message"))
+    MyChatService.sendMessage(1,MyMessage(0,1,"New message1"), "FriendOne")
     MyChatService.printChats()
-    MyChatService.sendMessage(1,MyMessage(0,1,0,"New message"))
-    MyChatService.sendMessage(1,MyMessage(0,1,0,"New message"))
-    MyChatService.sendMessage(1,MyMessage(0,1,0,"New message"))
+    MyChatService.sendMessage(1,MyMessage(0,1,"New message2"), "FriendOne")
+    MyChatService.sendMessage(2,MyMessage(0,2,"New message3"), "FriendTwo")
+    MyChatService.sendMessage(2,MyMessage(0,2,"New message4"), "FriendTwo")
     MyChatService.printChats()
 }
 data class MyChat(
@@ -14,12 +14,12 @@ data class MyChat(
     var countNew: Int,//Количество непрочитанных сообщений
     var communicationName: String,//имя участника(название чата)
     //var newCommunication: Boolean,//Есть новые входящие сообщения
-    //var messages = mutableListOf<MyMessage>()
+    var messages: MutableList<MyMessage> = mutableListOf()
 )
 data class MyMessage(
     var myMessageId: Int,
-    var chatId: Int,//Идентификатор чата
-    var typeMessage: Int,//  1-отправленное, 2-полученние, 3-прочитанное
+    //var chatId: Int,//Идентификатор чата
+    var typeMessage: Int,//  1-отправленное, 2-полученние, 3-прочитанное, 4 - удаленное
     var text: String
 )
 class NoMessageException: RuntimeException("No message with &myMessageId")
@@ -27,57 +27,69 @@ class NoMessageException: RuntimeException("No message with &myMessageId")
 class NoChatsException: RuntimeException("No chats with &chatsId")
 object MyChatService {
     var chats: MutableMap <Int, MyChat> = mutableMapOf()
-    var messages: MutableMap <Int, MyMessage> = mutableMapOf()
+    //var messages: MutableMap <Int, MyMessage> = mutableMapOf()
     fun printChats() = println(chats)
-    fun sendMessage(userId: Int, message: MyMessage) {
-        chats.getOrPut(userId) {
-            message.myMessageId = messages.size
-            message.chatId = userId
-            message.typeMessage = 2
-            messages[messages.size] = message
-            MyChat(userId, 1, "new friend")}
-            //var chat = chats[userId]?: throw NoChatException()
-            //chat.newCommunication = true
-            //chat.countNew += 1
-            //chats[message.chatId] = chat.copy()
+    fun clear() {
+        chats.clear()
+        //messages.clear()
+    }
+    fun sendMessage(userId: Int, message: MyMessage,communicationName: String){//
+//            if (chats.containsKey(userId)){
+//                chats[userId]?.messages?.add(message.copy())
+//            } else {
+//                val chat = MyChat(chats.size,1,communicationName=communicationName, messages = mutableListOf())
+//                chat.messages.add(message.copy())
+//                chats[userId] = chat
+//            }
+
+
+        var chat = chats.getOrPut(userId){ MyChat(chats.size,1,communicationName=communicationName, messages = mutableListOf())}.messages.add(message.copy())
     }
 
     fun chatForRead(myChatId: Int) = chats[myChatId]//Получить чат пользователя
 
     fun deleteChat(myChatId: Int)= chats.remove(myChatId)//Удалить  чат пользователя
 
-    fun createMyMessage(chatId: Int, text: String) = messages.put(messages.size, MyMessage(messages.size,chatId, 1,text))//Создать собственное сообщение
-
-
-    fun messagesFromChat(myChatId: Int, count: Int){//} messages: MutableMap <Int, MyMessage>){
-        //messages.filter {it:MyMessage(chateId=myChatId}.takeIf{it:MyMessage(chateId=myChatId,
-        var countRead: Int=0
-        while (count<countRead){
-            for ((index,message) in messages){// in with(messages) {it.chatId=myChatId? ->
-                var it: MyMessage = messages[index]?: throw NoMessageException()
-                if (it.chatId==myChatId){
-                    if (it.typeMessage==2){
-                        it.typeMessage=3
-                        countRead++
-                    }
-                }
-
-            }
+    fun createMyMessage(userId: Int, text: String) { //Создать собственное сообщение
+        var id: Int = 0
+        if (chats.containsKey(userId)) {
+            id = chats[userId]?.messages?.size ?: throw NoMessageException()
+            chats[userId]?.messages?.add(MyMessage(id, 1, text))
         }
-
     }
-    fun deleteMessage(myMessageId: Int) = messages.remove(myMessageId)?: throw NoMessageException()//удалить сообщение
 
+    fun lastMessages() = chats.values.map{chat -> chat.messages.lastOrNull{it.typeMessage==2}?.typeMessage=3 ?: throw NoMessageException() }
+//    fun messagesFromChat(myChatId: Int, count: Int){//} messages: MutableMap <Int, MyMessage>){
+//        //messages.filter {it:MyMessage(chateId=myChatId}.takeIf{it:MyMessage(chateId=myChatId,
+//        var countRead: Int=0
+//        while (count<countRead){
+//            for ((index,message) in messages){// in with(messages) {it.chatId=myChatId? ->
+//                var it: MyMessage = messages[index]?: throw NoMessageException()
+//                if (it.chatId==myChatId){
+//                    if (it.typeMessage==2){
+//                        it.typeMessage=3
+//                        countRead++
+//                    }
+//                }
+//
+//            }
+//        }
+//
+//    }
+    fun deleteMessage(userId: Int, myMessageId: Int) {
+        for ((userId, chat) in chats)
+    chat.messages[myMessageId].typeMessage = 4
+    }
     fun getChats(){
         var chatsName: Array<String> = arrayOf()
         for ((index, chat) in chats) {
             chatsName += chats[index]?.communicationName?: throw NoChatsException()
         }
     }
-    fun getUnreadChatcCount(): Int {
+    fun getUnreadChatsCount(): Int {
         var result: Int=0
         for ((index, chat) in chats) {
-            if (chats[index].countNew > 0) {
+            if (chat.countNew > 0){
                 result++
             }
         }
