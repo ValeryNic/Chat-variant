@@ -1,6 +1,4 @@
-import jdk.javadoc.internal.doclint.Messages
 import java.lang.RuntimeException
-
 fun main(args: Array<String>) {
     MyChatService.sendMessage(1,MyMessage(0,1,"New message1"), "FriendOne")
     MyChatService.printChats()
@@ -50,13 +48,9 @@ object MyChatService {
 
     fun deleteChat(userId: Int)= chats.remove(userId)//Удалить  чат пользователя
 
-    fun createMyMessage(userId: Int, text: String) { //Создать собственное сообщение
-        var id: Int = 0
-        if (chats.containsKey(userId)) {
-            id = chats[userId]?.messages?.size ?: throw NoMessageException()
-            chats[userId]?.messages?.add(MyMessage(id, 1, text))
-        }
-    }
+    fun createMyMessage(userId: Int, text: String): MyMessage = //Создать собственное сообщение
+         MyChatService.chatForRead(userId)?.messages?.add(messages.size,1,text)
+
 
     fun lastMessages() = chats.values.map{chat -> chat.messages.lastOrNull{it.typeMessage==2}?.typeMessage=3 ?: throw NoMessageException() }
     fun messagesFromChat(userId: Int, count: Int): List<MyMessage>{//Взять 8 непрочитанных сообщений
