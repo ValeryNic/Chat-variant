@@ -21,7 +21,6 @@ dependencies {
 kotlin {
     jvmToolchain(8)
 }
-test {github.com/netology-code/kt-code/blob/3f2ad31f045c26bf54c4bf024271cf822742082f/04_tests/tests/build.gradle#L16}
 
 application {
     mainClassName = 'MainKtTest'

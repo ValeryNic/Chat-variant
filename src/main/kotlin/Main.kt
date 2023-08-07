@@ -31,32 +31,42 @@ object MyChatService {
         chats.clear()
         //messages.clear()
     }
-    fun sendMessage(userId: Int, message: MyMessage,communicationName: String){//
-//            if (chats.containsKey(userId)){
-//                chats[userId]?.messages?.add(message.copy())
-//            } else {
-//                val chat = MyChat(chats.size,1,communicationName=communicationName, messages = mutableListOf())
-//                chat.messages.add(message.copy())
-//                chats[userId] = chat
-//            }
+    fun sendMessage(userId: Int, message: MyMessage,communicationName: String) =//создание или изменение чата
+//        if (chats.containsKey(userId)) {
+//            chats[userId]?.messages?.add(message.copy()) ?: throw NoChatsException()
+//        } else {
+//            val chat = MyChat(chats.size, 1, communicationName = communicationName, messages = mutableListOf())
+//            chat.messages.add(message.copy())
+//            chats[chat.userId] = chat
+    //            }
+    //}
 
 
-        var chat = chats.getOrPut(userId){ MyChat(chats.size,1,communicationName=communicationName, messages = mutableListOf())}.messages.add(message.copy())
-    }
+        chats.getOrPut(userId){ MyChat(chats.size,1,communicationName=communicationName,)}.messages.add(message.copy())
+
 
     fun chatForRead(userId: Int) = chats[userId]//Получить чат пользователя
 
     fun deleteChat(userId: Int)= chats.remove(userId)//Удалить  чат пользователя
 
-    fun createMyMessage(userId: Int, text: String): MyMessage = //Создать собственное сообщение
-         MyChatService.chatForRead(userId)?.messages?.add(messages.size,1,text)
+    fun createMyMessage(userId: Int, text: String)=//Создать собственное сообщение
+        chats[userId]?.messages?.add(MyMessage(chats[userId]!!.messages.size,1,text))?: throw NoChatsException()
 
 
-    fun lastMessages() = chats.values.map{chat -> chat.messages.lastOrNull{it.typeMessage==2}?.typeMessage=3 ?: throw NoMessageException() }
-    fun messagesFromChat(userId: Int, count: Int): List<MyMessage>{//Взять 8 непрочитанных сообщений
-        val chat = chats[userId]?: throw NoChatsException()
-        return chat.messages.filter{it.typeMessage==2}.takeLast(count).onEach {it.typeMessage=3}
+
+    //fun lastMessages() = chats.values.map{chat -> chat.messages.lastOrNull{it.typeMessage==2}?.typeMessage=3 ?: throw NoMessageException() }
+    fun messagesFromChat(userId: Int, count: Int): List<MyMessage> {
+        val chat = chats[userId]?: throw  NoChatsException()
+           return  chat.messages//.asSequence()
+           .filter { it.typeMessage==2 }
+           .take(count)
+           .ifEmpty { throw NoMessageException() }
+           .onEach { it.typeMessage=3 }
     }
+
+
+
+
     fun deleteMessage(userId: Int, myMessageId: Int) {
         for ((userId, chat) in chats)
     chat.messages[myMessageId].typeMessage = 4
