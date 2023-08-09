@@ -57,11 +57,13 @@ object MyChatService {
     //fun lastMessages() = chats.values.map{chat -> chat.messages.lastOrNull{it.typeMessage==2}?.typeMessage=3 ?: throw NoMessageException() }
     fun messagesFromChat(userId: Int, count: Int): List<MyMessage> {
         val chat = chats[userId]?: throw  NoChatsException()
-           return  chat.messages//.asSequence()
+           return  chat.messages
+               .asSequence()
            .filter { it.typeMessage==2 }
            .take(count)
            .ifEmpty { throw NoMessageException() }
            .onEach { it.typeMessage=3 }
+               .toList()
     }
 
 
